@@ -26,7 +26,7 @@ L'attaquant fait office de serveur et attant la connection depuis la victime. La
 
 ### Fonctions côté serveur
 Ces fonctionnalitée ne sont exécuté que du côté du serveur et ne transmet rien à la victime. 
- - help \[commands,\]: Affiche les différentes commandes demandé par l'utilisteur, ainsi qu'une brêve explications de chacun d'elles. Si aucune commande n'est fournis, il affiche alors toutes les commandes disponibles.
+ - help \[commands,\] : Affiche les différentes commandes demandé par l'utilisteur, ainsi qu'une brêve explications de chacun d'elles. Si aucune commande n'est fournis, il affiche alors toutes les commandes disponibles.
  - list : List les différentes commandes disponibles
 
 
