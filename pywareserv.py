@@ -154,7 +154,7 @@ class Commands:
                                                          "Close connection and exit this prompt."
                                                          " PyWare on client is kill."),
                                    "help": command_tuple(lambda arg="": self.help(arg),
-                                                         "help [Command]",
+                                                         "help [Commands,]",
                                                          "Print this help."),
                                    "list": command_tuple(lambda: self.list(),
                                                          "list",
