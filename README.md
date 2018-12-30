@@ -10,27 +10,27 @@ L'ensemble des programmes ont été écrits et testés avec [Python](https://www
 ## Architecture
  - Coté attaquant
    - [**PyWareGen**](pywaregen.py) : Générateur du fichier de configuration utilisé par la victime.
-   - [**PyWareServ**](pywareserv.py) : Serveur de connexion. Lorsqu'une liaison est établie, il ouvre un shell interactif afin d'envoyer les commande à la victime. Le port de connexion peut être précisé à l'aide de l'argument `-p Port`. Par défault, le 4444 est utilisé.
-   - [crypto](crypto.py) : Fichier python regroupant les fontions de chiffrement symétrique et asymétrique. Il est utilisé par *PyWareServ* et par le malware, et par conséquence présent aussi sur la victime.
-   - [hello](hello.py) : Fichier python regroupant les différents démarrage de PyWare. Il est utilisé par *PyWareGen* et *PyWareServ*.
+   - [**PyWareServ**](pywareserv.py) : Serveur de connexion. Lorsqu'une liaison est établie, il ouvre un shell interactif afin d'envoyer les commandes à la victime. Le port de connexion peut être précisé à l'aide de l'argument `-p Port`. Par défaut, le 4444 est utilisé.
+   - [crypto](crypto.py) : Fichier python regroupant les fonctions de chiffrements symétrique et asymétrique. Il est utilisé par *PyWareServ* et par le malware, et par conséquence présent aussi sur la victime.
+   - [hello](hello.py) : Fichier python regroupant les différents démarrages de PyWare. Il est utilisé par *PyWareGen* et *PyWareServ*.
    
  - Coté victime : 
    - [**malware**.py](malware.py) : Client à exécuter sur la victime. Il gère la connexion et les différentes commandes envoyées par l'utilisateur distant. Le nom du fichier est laissé libre à l'utilisateur.
    - [**malware**.cfg](malware.cfg) : Fichier de configuration regroupant les différents serveurs de l'attaquant. Le nom du fichier doit être le même que celui du malware. Il peut être édité à la main ou à l'aide de PyWareGen. Les différentes valeurs demandées sont :
      - \[server name\] ; un nom arbitraire pour le serveur.
-     - Host ; Addresse ip ou nom de domaine à utiliser pour se connecter au serveur.
-     - Port ; Port de connexion au serveur. Il doit être un numbre entier compris entre 1 et 65535 inclus.
+     - Host ; Adresse ip ou nom de domaine à utiliser pour se connecter au serveur.
+     - Port ; Port de connexion au serveur. Il doit être un nombre entier compris entre 1 et 65535 inclus.
      - RetryInterval ; Intervalle de temps en seconde entre deux tentatives de connexion. Il doit un nombre entier positif.
-   - [crypto.py](crpyto.py) : Fichier python gérant le chiffrement. Il est un copie de celui utilisé côté attaquant.
+   - [crypto.py](crpyto.py) : Fichier python gérant le chiffrement. Il est une copie de celui utilisé côté attaquant.
 
 ## Fonctionnement
-En lançant PyWareServ, vous démarrer le serveur. Celui-ci écoute sur le port 4444 ou sur le port passé en argument, s'il y en a un.
+En lançant PyWareServ, vous démarrez le serveur. Celui-ci écoute sur le port 4444 ou sur le port passé en argument, s'il y en a un.
 
-De sont côté, la victime démarre le malware. Celui-ci ira lire le fichier de configuration en commencant par la section par défault *DEFAULT*. Il écrasera ensuite ces valeurs par celle inscrite dans la première section personnalisée. Si une erreur est présente dans cette section, celles de la section par défault seront utilisé. Si le fichier de configuration est manquant ou que des erreurs sont présentes dans la section par défault, des valeurs se secours ont été écrites dans le programme du malware. Pour les connaitres, veuillez vous référer au début du [fichier python adéquoit](malware.py). Après celà, le malware essaye d'initier la connexion en temps que client vers le serveur. Cette solution a été choisie car elle permet de s'affrenchir des limitations lié au NAT et au pare-feu. Si la connexion échoue car il est impossible de résoudre le nom de domaine du serveur, le serveur suivant listé dans le fichier de configuration est utilisé. S'il échoue pour une autre raison, le malware se met en pause pendant l'interval de temps inscript dans le fichier de configuration. 
+De son côté, la victime démarre le malware. Celui-ci ira lire le fichier de configuration en commençant par la section par défaut *DEFAULT*. Il écrasera ensuite ces valeurs par celles inscrites dans la première section personnalisée. Si une erreur est présente dans cette section, celles de la section par défaut seront utilisées. Si le fichier de configuration est manquant ou que des erreurs sont présentes dans la section par défaut, des valeurs se secours ont été écrites dans le programme du malware. Pour les connaitre, veuillez-vous référer au début du [fichier python adéquat](malware.py). Après cela, le malware essaye d'initier la connexion en tant que client vers le serveur. Cette solution a été choisie car elle permet de s'affranchir des limitations liées au NAT et au pare-feu. Si la connexion échoue car il est impossible de résoudre le nom de domaine du serveur, le serveur suivant listé dans le fichier de configuration est utilisé. S'il échoue pour une autre raison, le malware se met en pause pendant l'intervalle de temps inscrit dans le fichier de configuration. 
 
-Lorsque la connexion est établie, le serveur génère une paire de clef RSA de 2048 bits et envoie au client la clef publique chiffré en base64. La victime récupère cette clef publique. Si le fichier *crypto.py* est disponible et que PyCryptodome est installé, une clef de session AES 256 bits et un vecteur d'initialisation de 128 bits sont alors générés, chiffrés par la clef publique et envoyé au serveur. Si le chiffrement n'est pas disponible, le client envoit un message chiffré en base64 afin de prévenir le serveur. L'attaquant vérifie que la cryptographie est bien gérée par la victime. Si c'est bien le cas, la clef de session et le vecteur d'initialisation sont alors utilisé pour sécurisé le reste de la conenction. Sinon, un chiffrement par base64 est utilisé pour le reste de la communication. Dans les deux cas, l'utilisateur est prévenu. Il est possible de redémarrer cette phase de génération et d'échange de clefs à l'aide de la commande `newkeys`.
+Lorsque la connexion est établie, le serveur génère une paire de clef RSA de 2048 bits et envoie au client la clef publique chiffrée en base64. La victime récupère cette clef publique. Si le fichier *crypto.py* est disponible et que PyCryptodome est installé, une clef de session AES 256 bits et un vecteur d'initialisation de 128 bits sont alors générés, chiffrés avec la clef publique et envoyé au serveur. Si le chiffrement n'est pas disponible, le client envoie un message chiffré en base64 afin de prévenir le serveur. L'attaquant vérifie que la cryptographie est bien gérée par la victime. Si c'est bien le cas, la clef de session et le vecteur d'initialisation sont alors utilisés pour sécuriser le reste de la connexion. Sinon, un chiffrement par base64 est utilisé pour le reste de la communication. Dans les deux cas, l'utilisateur est prévenu. Il est possible de redémarrer cette phase de génération et d'échange de clefs à l'aide de la commande `newkeys`.
 
-Une fois cette phase terminer, un shell intéractif est ouvert côté attaquant. Les diverses commandes fournies par l'utilisateurs seront dabors vérifiées avant d'être transmit à la victime si besoin et si la commande est correcte. La session est terminée des deux côté lorsque l'utilisateur rentre la commande `exit`, `quit` ou `kill`. Seul cette troisième commande arrête le malware. Les deux autre remettent le malware dans la phase de connexion, sans relecture du fichier de configuration.
+Une fois cette phase terminée, un shell intéractif est ouvert côté attaquant. Les diverses commandes fournies par l'utilisateurs seront d’abord vérifiées avant d'être transmit à la victime si besoin et si la commande est correcte. La session est terminée des deux côtés lorsque l'utilisateur rentre la commande `exit`, `quit` ou `kill`. Seul cette troisième commande arrête le malware. Les deux autres remettent le malware dans la phase de connexion, sans relecture du fichier de configuration.
 
 ## Fonctionnalités
 ### Gestion de la communication
@@ -70,12 +70,12 @@ Ces fonctionnalités ne sont exécutées que du côté de la machine locale et n
 ### Exécutions distantes
 | Commandes | Description |
 | -- | -- |
-| autostart \[Name\] | Installe PyWare sur la victime sous le nom 'Name'. De plus, PyWare démarre de manière automatique à la connexion de l'utilisateur. Si name n'est pas renseigné, 'services' est utilisé. Pour Linux, les fichiers sont copiés dans le répertoire ~/.*name* et ajouté dans la table cron de l'utilisateur. Pour Windows, les fichiers sont copiés dans le répertoire %APPDATA%\\Microsoft\\Windows\\*Name* et un script est écrit sous le nom %APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\*name*.vbs . *Remarque :* Vous pouvez mettre à jours manuellement PyWare en écrasant ces fichier à l'aide de la commande `upload`|
+| autostart \[Name\] | Installe PyWare sur la victime sous le nom 'Name'. De plus, PyWare démarre de manière automatique à la connexion de l'utilisateur. Si 'name' n'est pas renseigné, 'services' est utilisé. Pour Linux, les fichiers sont copiés dans le répertoire ~/.*name* et ajouté dans la table cron de l'utilisateur. Pour Windows, les fichiers sont copiés dans le répertoire %APPDATA%\\Microsoft\\Windows\\*Name* et un script est écrit sous le nom %APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\*name*.vbs . *Remarque :* Vous pouvez mettre à jours manuellement PyWare en écrasant ces fichier à l'aide de la commande `upload`|
 | exec Command | Exécute la commande 'Command' sur la victime. Attention, cette fonction n'est pas interactive. |
 | installmodules | Installe les modules Python nécessaire à PyWare pour prendre en charge l'ensemble des fonctionnalités. |
 
 ## Algorithmique
-Pour comprendre comment fonctionne les différents fichiers, veuillez-vous aux fichiers eux-même.
+Pour comprendre comment fonctionne les différents fichiers, veuillez-vous aux fichiers eux-mêmes.
 
 ## Fonctions supplémentaires
 Ces fonctions supplémentaires ont été imaginées mais n'ont malheureusement pas encore été écrites.
@@ -83,7 +83,7 @@ Ces fonctions supplémentaires ont été imaginées mais n'ont malheureusement p
  - [ ] login de la session
  - [ ] reload PyWare
  - [ ] scan réseau
- - [ ] shell intéractif / ouverture d'une connection remote ssh
+ - [ ] shell intéractif / ouverture d'une connexion remote ssh
  - [ ] mise à jour de PyWare
 
 ## Références
