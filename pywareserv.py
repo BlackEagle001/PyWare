@@ -167,7 +167,7 @@ class Commands:
                                    "autostart": command_tuple(lambda arg="": self.autostart(arg),
                                                               "autostart [Name]",
                                                               "PyWare on client starts automatically."
-                                                              " [Name] is the name used for the registration"),
+                                                              " [Name] is the name used for the registration."),
                                    "newkeys": command_tuple(lambda: self.newkeys(),
                                                             "newkeys",
                                                             "Generate and use a new session key."),
