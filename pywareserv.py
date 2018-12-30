@@ -259,18 +259,20 @@ class Commands:
         self.send_command("kill")
         self.connection.end()
 
-    def help(self, command=""):
-        if command == "":
+    def help(self, commands=""):
+        if commands == "":
             for command in sorted(self.commands_available.keys()):
                 print("{:20} : {}".format(self.commands_available[command].option,
                                           self.commands_available[command].help))
         else:
-            try:
-                print("{:20} : {}".format(self.commands_available[command].option,
-                                          self.commands_available[command].help))
-            except KeyError:
-                print("/'{}/' not available\n".format(command))
-                self.help()
+            commands = commands.replace(",", " ")
+            commands = commands.split()
+            for command in sorted(commands):
+                try:
+                    print("{:20} : {}".format(self.commands_available[command].option,
+                                              self.commands_available[command].help))
+                except KeyError:
+                    print("\'{}\' not available\n".format(command))
 
     def list(self):
         list_comm = ""
