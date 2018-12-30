@@ -28,18 +28,18 @@ En lançant PyWareServ, vous démarrer le serveur. Celui-ci écoute sur le port 
 
 De sont côté, la victime démarre le malware. Celui-ci ira lire le fichier de configuration en commencant par la section par défault *DEFAULT*. Il écrasera ensuite ces valeurs par celle inscrite dans la première section personnalisée. Si une erreur est présente dans cette section, celles de la section par défault seront utilisé. Si le fichier de configuration est manquant ou que des erreurs sont présentes dans la section par défault, des valeurs se secours ont été écrites dans le programme du malware. Pour les connaitres, veuillez vous référer au début du [fichier python adéquoit](malware.py). Après celà, le malware essaye d'initier la connexion en temps que client vers le serveur. Cette solution a été choisie car elle permet de s'affrenchir des limitations lié au NAT et au pare-feu. Si la connexion échoue car il est impossible de résoudre le nom de domaine du serveur, le serveur suivant listé dans le fichier de configuration est utilisé. S'il échoue pour une autre raison, le malware se met en pause pendant l'interval de temps inscript dans le fichier de configuration. 
 
-Lorsque la connexion est établie, le serveur génère une paire de clef RSA de 2048 bits et envoie au client la clef publique chiffré en base64. La victime récupère cette clef publique. Si le fichier *crypto.py* est disponible et que PyCryptodome est installé, une clef de session AES 256 bits et un vecteur d'initialisation de 128 bits sont alors générés, chiffrés par la clef publique et envoyé au serveur. Si le chiffrement n'est pas disponible, le client envoit un message chiffré en base64 afin de prévenir le serveur. L'attaquant vérifie que la cryptographie est bien gérée par la victime. Si c'est bien le cas, la clef de session et le vecteur d'initialisation sont alors utilisé pour sécurisé le reste de la conenction. Sinon, un chiffrement par base64 est utilisé pour le reste de la communication. Dans les deux cas, l'utilisateur est prévenu. Il est possible de redémarrer cette phase de génération et d'échange de clefs à l'aide de la commande *newkeys*.
+Lorsque la connexion est établie, le serveur génère une paire de clef RSA de 2048 bits et envoie au client la clef publique chiffré en base64. La victime récupère cette clef publique. Si le fichier *crypto.py* est disponible et que PyCryptodome est installé, une clef de session AES 256 bits et un vecteur d'initialisation de 128 bits sont alors générés, chiffrés par la clef publique et envoyé au serveur. Si le chiffrement n'est pas disponible, le client envoit un message chiffré en base64 afin de prévenir le serveur. L'attaquant vérifie que la cryptographie est bien gérée par la victime. Si c'est bien le cas, la clef de session et le vecteur d'initialisation sont alors utilisé pour sécurisé le reste de la conenction. Sinon, un chiffrement par base64 est utilisé pour le reste de la communication. Dans les deux cas, l'utilisateur est prévenu. Il est possible de redémarrer cette phase de génération et d'échange de clefs à l'aide de la commande `newkeys`.
 
-Une fois cette phase terminer, un shell intéractif est ouvert côté attaquant. Les diverses commandes fournies par l'utilisateurs seront dabors vérifiées avant d'être transmit à la victime si besoin et si la commande est correcte. La session est terminée des deux côté lorsque l'utilisateur rentre la commande *exit*, *quit* ou *kill*. Seul cette troisième commande arrête le malware. Les deux autre remettent le malware dans la phase de connexion, sans relecture du fichier de configuration.
+Une fois cette phase terminer, un shell intéractif est ouvert côté attaquant. Les diverses commandes fournies par l'utilisateurs seront dabors vérifiées avant d'être transmit à la victime si besoin et si la commande est correcte. La session est terminée des deux côté lorsque l'utilisateur rentre la commande `exit`, `quit` ou `kill`. Seul cette troisième commande arrête le malware. Les deux autre remettent le malware dans la phase de connexion, sans relecture du fichier de configuration.
 
 ## Fonctionnalités
 ### Gestion de la communication
 | Commandes | Description |
 | -- | -- |
-| exit | Termine la connexion entre les deux machines et ferme le programme côté attaquant. Cependant, PyWare continue de tourner sur la cible et retente une connexion vers le serveur sélectionné à un intervalle de temps déterminé dans le fichier de configuration. Pour arrêter le programme sur les deux machines, utilisez la commande *kill*. |
+| exit | Termine la connexion entre les deux machines et ferme le programme côté attaquant. Cependant, PyWare continue de tourner sur la cible et retente une connexion vers le serveur sélectionné à un intervalle de temps déterminé dans le fichier de configuration. Pour arrêter le programme sur les deux machines, utilisez la commande `kill`. |
 | kill | Termine la connexion et ferme les programmes des deux côtés. |
 | newkeys | Regénère une clef de session afin de sécuriser la communication. |
-| quit | Alias de la commande *exit*. |
+| quit | Alias de la commande `exit`. |
 
 ### Fonctions locales
 Ces fonctionnalités ne sont exécutées que du côté de la machine locale et ne transmet rien à la victime. 
@@ -49,7 +49,7 @@ Ces fonctionnalités ne sont exécutées que du côté de la machine locale et n
 | help \[Commands,\] | Affiche les différentes commandes demandées par l'utilisateur, ainsi qu'une brève explications de chacune d'elles. Si aucune commande n'est fournie, il affiche alors toutes les commandes disponibles. |
 | list | Liste les différentes commandes disponibles. |
 | /cd Dir | Change le répertoire courant à 'Dir'. |
-| /dir \[Dir\] | Alias pour la commande */ls*. |
+| /dir \[Dir\] | Alias pour la commande `/ls`. |
 | /ls \[Dir\] | Liste les fichiers et répertoire du dossier 'Dir'. Si 'Dir' n'est pas spécifié, le dossier courant est utilisé. |
 | /pwd | Affiche le dossier courant. |
 
@@ -57,25 +57,34 @@ Ces fonctionnalités ne sont exécutées que du côté de la machine locale et n
 | Commandes | Description |
 | -- | -- |
 | cd Dir | Change le répertoire courant à 'Dir'. |
-| dir \[Dir\] | Alias pour la commande */ls*. |
+| dir \[Dir\] | Alias pour la commande `ls`. |
 | download File | Télécharge le fichier 'File' depuis la victime vers la machine locale. Le fichier est enregistré dans le dossier courant en conservant le même nom. |
 | getinfo \[Options,\] | Récupère des informations sur la victime. Si aucune option n'est renseignée, il les retourne toutes. Les options disponibles sont `user, hostname, fqdn, ip, os, version, architecture, language, time`. |
 | getservices | Affiche l'ensemble des services en cours d'exécution sur la victime. |
 | getusers | Liste l'ensemble des utilisateurs de la victime. |
 | ls \[Dir\] | List les fichiers et répertoire du dossier 'Dir'. Si 'Dir' n'est pas spécifié, le dossier courant est utilisé. |
-| ps | Alias pour la commande *getservices*. |
+| ps | Alias pour la commande `getservices`. |
 | pwd | Affiche le dossier courant. |
 | upload File | Envoie le fichier 'File' depuis la machine courant vers la victime. Le fichier est enregistré dans le dossier courant en conservant le même nom. |
 
 ### Exécutions distantes
 | Commandes | Description |
 | -- | -- |
-| autostart \[Name\] | Installe PyWare sur la victime sous le nom 'Name'. De plus, PyWare démarre de manière automatique à la connexion de l'utilisateur. Si name n'est pas renseigné, 'services' est utilisé. Pour Linux, les fichiers sont copiés dans le répertoire ~/.*name* et ajouté dans la table cron de l'utilisateur. Pour Windows, les fichiers sont copiés dans le répertoire %APPDATA%\\Microsoft\\Windows\\*Name* et un script est écrit sous le nom %APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\*name*.vbs |
+| autostart \[Name\] | Installe PyWare sur la victime sous le nom 'Name'. De plus, PyWare démarre de manière automatique à la connexion de l'utilisateur. Si name n'est pas renseigné, 'services' est utilisé. Pour Linux, les fichiers sont copiés dans le répertoire ~/.*name* et ajouté dans la table cron de l'utilisateur. Pour Windows, les fichiers sont copiés dans le répertoire %APPDATA%\\Microsoft\\Windows\\*Name* et un script est écrit sous le nom %APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\*name*.vbs . *Remarque :* Vous pouvez mettre à jours manuellement PyWare en écrasant ces fichier à l'aide de la commande `upload`|
 | exec Command | Exécute la commande 'Command' sur la victime. Attention, cette fonction n'est pas interactive. |
 | installmodules | Installe les modules Python nécessaire à PyWare pour prendre en charge l'ensemble des fonctionnalités. |
 
 ## Algorithmique
-Pour comprendre comment fonctionne les différents fichiers, veuillez-vous référer au fichier [algorithmique.md](algorithmique.md).
+Pour comprendre comment fonctionne les différents fichiers, veuillez-vous aux fichiers eux-même.
+
+## Fonctions supplémentaires
+Ces fonctions supplémentaires ont été imaginées mais n'ont malheureusement pas encore été écrites.
+ - [ ] keylogger {start|stop|download}
+ - [ ] login de la session
+ - [ ] reload PyWare
+ - [ ] scan réseau
+ - [ ] shell intéractif / ouverture d'une connection remote ssh
+ - [ ] mise à jour de PyWare
 
 ## Références
  - https://www.python.org/
