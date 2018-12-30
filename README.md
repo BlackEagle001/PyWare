@@ -1,28 +1,42 @@
 # PyWare
 ## Introduction
-PyWare est un petit malware écrit en python. Il rentre dans le cadre du cursus de *sécurité des systèmes* de la haute-école *[Henallux](https://www.henallux.be/)*. En particulier le cours *[R209 : Developpement](https://services.henallux.be/paysage/public/cursus/infoaa/idAa/97103/idUe/97118/idCursus/68)* donné en deuxième bachelier.
+PyWare est un petit malware écrit en python. Il rentre dans le cadre du cursus de *sécurité des systèmes* de la haute-école [*Henallux*](https://www.henallux.be/). En particulier le cours [*R209 : Developpement*](https://services.henallux.be/paysage/public/cursus/infoaa/idAa/97103/idUe/97118/idCursus/68) donné en deuxième bachelier.
 
 PyWare ne se charge pas de l'infection et part du postulat que la victime est déjà infectée pour le démarrage de PyWare.
 
 ## Prérequis
-L'ensemble des programmes ont été écrit et testé avec [Python](https://www.python.org) [3.7.2](https://www.python.org/downloads/release/python-372/) . Celui-ci est nécessaire sur les deux machines et de préférence ajouté à la variable d'environnement PATH. De plus, le module [PyCryptodome](https://pycryptodome.readthedocs.io) est nécessaire sur le serveur de l'attaquant. Si le module n'est pas présent sur la victime, une fonctionnalité de PyWare permet de l'installer.
+L'ensemble des programmes ont été écrits et testés avec [Python](https://www.python.org) [3.7.2](https://www.python.org/downloads/release/python-372/) . Celui-ci est nécessaire sur les deux machines et de préférence ajouté à la variable d'environnement PATH. De plus, le module [PyCryptodome](https://pycryptodome.readthedocs.io) est nécessaire sur le serveur de l'attaquant. Si le module n'est pas présent sur la victime, une fonctionnalité de PyWare permet de l'installer.
 
 ## Architecture
-L'attaquant fait office de serveur et attend la connexion depuis la victime. La victime, de son côté, essaye une connexion vers l'un des serveur de l'attaquant à un intervalle de temps déterminer. Cette solution permet de s'affranchir des informations de connexion de la victime. De plus, elle permet de contourner les problèmes liés au NAT et Firewall. Une fois la connexion établie, un shell interactif est ouvert côté attaquant et les diverses commandes acceptables sont ensuite transféré à la victime. Le retour de la commande est renvoyé à l'attaquant et est affichée.
+ - Coté attaquant
+   - [**PyWareGen**](pywaregen.py) : Générateur du fichier de configuration utilisé par la victime.
+   - [**PyWareServ**](pywareserv.py) : Serveur de connexion. Lorsqu'une liaison est établie, il ouvre un shell interactif afin d'envoyer les commande à la victime. Le port de connexion peut être précisé à l'aide de l'argument `-p Port`. Par défault, le 4444 est utilisé.
+   - [crypto](crypto.py) : Fichier python regroupant les fontions de chiffrement symétrique et asymétrique. Il est utilisé par *PyWareServ* et par le malware, et par conséquence présent aussi sur la victime.
+   - [hello](hello.py) : Fichier python regroupant les différents démarrage de PyWare. Il est utilisé par *PyWareGen* et *PyWareServ*.
+   
+ - Coté victime : 
+   - [**malware**.py](malware.py) : Client à exécuter sur la victime. Il gère la connexion et les différentes commandes envoyées par l'utilisateur distant. Le nom du fichier est laissé libre à l'utilisateur.
+   - [**malware**.cfg](malware.cfg) : Fichier de configuration regroupant les différents serveurs de l'attaquant. Le nom du fichier doit être le même que celui du malware. Il peut être édité à la main ou à l'aide de PyWareGen. Les différentes valeurs demandées sont :
+     - \[server name\] ; un nom arbitraire pour le serveur.
+     - Host ; Addresse ip ou nom de domaine à utiliser pour se connecter au serveur.
+     - Port ; Port de connexion au serveur. Il doit être un numbre entier compris entre 1 et 65535 inclus.
+     - RetryInterval ; Intervalle de temps en seconde entre deux tentatives de connexion. Il doit un nombre entier positif.
+   - [crypto.py](crpyto.py) : Fichier python gérant le chiffrement. Il est un copie de celui utilisé côté attaquant.
 
 ## Fonctionnement
-- Attaquant
-  - PyWareGen : Générateur du fichier de configuration listant les différents serveurs que l'attaquant peut utiliser, ainsi que leurs informations de connexion.
-  - PyWareServ : Serveur de connexion. Il attend une connexion de la victime puis ouvre un shell intérectif.
-- Victime
-  - Malware : Client de connexion vers le serveur. Il essaye d'ouvrir une connexion vers celui-ci à partir du fichier de configuration. Le nom du fichier est laissé libre à l'utilisateur. Il nécéssite aussi le fichier *crypto.py*.
-  - Configuration : Fichier de configuration regroupant 
+En lançant PyWareServ, vous démarrer le serveur. Celui-ci écoute sur le port 4444 ou sur le port passé en argument, s'il y en a un.
+
+De sont côté, la victime démarre le malware. Celui-ci ira lire le fichier de configuration en commencant par la section par défault *DEFAULT*. Il écrasera ensuite ces valeurs par celle inscrite dans la première section personnalisée. Si une erreur est présente dans cette section, celles de la section par défault seront utilisé. Si le fichier de configuration est manquant ou que des erreurs sont présentes dans la section par défault, des valeurs se secours ont été écrites dans le programme du malware. Pour les connaitres, veuillez vous référer au début du [fichier python adéquoit](malware.py). Après celà, le malware essaye d'initier la connexion en temps que client vers le serveur. Cette solution a été choisie car elle permet de s'affrenchir des limitations lié au NAT et au pare-feu. Si la connexion échoue car il est impossible de résoudre le nom de domaine du serveur, le serveur suivant listé dans le fichier de configuration est utilisé. S'il échoue pour une autre raison, le malware se met en pause pendant l'interval de temps inscript dans le fichier de configuration. 
+
+Lorsque la connexion est établie, le serveur génère une paire de clef RSA de 2048 bits et envoie au client la clef publique chiffré en base64. La victime récupère cette clef publique. Si le fichier *crypto.py* est disponible et que PyCryptodome est installé, une clef de session AES 256 bits et un vecteur d'initialisation de 128 bits sont alors générés, chiffrés par la clef publique et envoyé au serveur. Si le chiffrement n'est pas disponible, le client envoit un message chiffré en base64 afin de prévenir le serveur. L'attaquant vérifie que la cryptographie est bien gérée par la victime. Si c'est bien le cas, la clef de session et le vecteur d'initialisation sont alors utilisé pour sécurisé le reste de la conenction. Sinon, un chiffrement par base64 est utilisé pour le reste de la communication. Dans les deux cas, l'utilisateur est prévenu. Il est possible de redémarrer cette phase de génération et d'échange de clefs à l'aide de la commande *newkeys*.
+
+Une fois cette phase terminer, un shell intéractif est ouvert côté attaquant. Les diverses commandes fournies par l'utilisateurs seront dabors vérifiées avant d'être transmit à la victime si besoin et si la commande est correcte. La session est terminée des deux côté lorsque l'utilisateur rentre la commande *exit*, *quit* ou *kill*. Seul cette troisième commande arrête le malware. Les deux autre remettent le malware dans la phase de connexion, sans relecture du fichier de configuration.
 
 ## Fonctionnalités
 ### Gestion de la communication
 | Commandes | Description |
 | -- | -- |
-| exit | Termine la connexion entre les deux machines et ferme le programme côté attaquant. Cependant, PyWare continue de tourner sur la cible et retente une connexion vers le serveur sélectionné à un intervalle de temps déterminer dans le fichier de configuration. Pour arrêter le programme sur les deux machines, utilisez la commande *kill*. |
+| exit | Termine la connexion entre les deux machines et ferme le programme côté attaquant. Cependant, PyWare continue de tourner sur la cible et retente une connexion vers le serveur sélectionné à un intervalle de temps déterminé dans le fichier de configuration. Pour arrêter le programme sur les deux machines, utilisez la commande *kill*. |
 | kill | Termine la connexion et ferme les programmes des deux côtés. |
 | newkeys | Regénère une clef de session afin de sécuriser la communication. |
 | quit | Alias de la commande *exit*. |
@@ -32,11 +46,11 @@ Ces fonctionnalités ne sont exécutées que du côté de la machine locale et n
 
 | Commandes | Description |
 | -- | -- |
-| help \[Commands,\] | Affiche les différentes commandes demandé par l'utilisateur, ainsi qu'une brève explications de chacun d'elles. Si aucune commande n'est fournie, il affiche alors toutes les commandes disponibles. |
-| list | List les différentes commandes disponibles. |
+| help \[Commands,\] | Affiche les différentes commandes demandées par l'utilisateur, ainsi qu'une brève explications de chacune d'elles. Si aucune commande n'est fournie, il affiche alors toutes les commandes disponibles. |
+| list | Liste les différentes commandes disponibles. |
 | /cd Dir | Change le répertoire courant à 'Dir'. |
 | /dir \[Dir\] | Alias pour la commande */ls*. |
-| /ls \[Dir\] | List les fichiers et répertoire du dossier 'Dir'. Si 'Dir' n'est pas spécifier, le dossier courant est utilisé. |
+| /ls \[Dir\] | Liste les fichiers et répertoire du dossier 'Dir'. Si 'Dir' n'est pas spécifié, le dossier courant est utilisé. |
 | /pwd | Affiche le dossier courant. |
 
 ### Informations
@@ -48,7 +62,7 @@ Ces fonctionnalités ne sont exécutées que du côté de la machine locale et n
 | getinfo \[Options,\] | Récupère des informations sur la victime. Si aucune option n'est renseignée, il les retourne toutes. Les options disponibles sont `user, hostname, fqdn, ip, os, version, architecture, language, time`. |
 | getservices | Affiche l'ensemble des services en cours d'exécution sur la victime. |
 | getusers | Liste l'ensemble des utilisateurs de la victime. |
-| ls \[Dir\] | List les fichiers et répertoire du dossier 'Dir'. Si 'Dir' n'est pas spécifier, le dossier courant est utilisé. |
+| ls \[Dir\] | List les fichiers et répertoire du dossier 'Dir'. Si 'Dir' n'est pas spécifié, le dossier courant est utilisé. |
 | ps | Alias pour la commande *getservices*. |
 | pwd | Affiche le dossier courant. |
 | upload File | Envoie le fichier 'File' depuis la machine courant vers la victime. Le fichier est enregistré dans le dossier courant en conservant le même nom. |
@@ -61,7 +75,7 @@ Ces fonctionnalités ne sont exécutées que du côté de la machine locale et n
 | installmodules | Installe les modules Python nécessaire à PyWare pour prendre en charge l'ensemble des fonctionnalités. |
 
 ## Algorithmique
-Pour comprendre comment fonctionne les différentes fichiers, veuillez-vous référer au fichier [algorithmique.md](algorithmique.md).
+Pour comprendre comment fonctionne les différents fichiers, veuillez-vous référer au fichier [algorithmique.md](algorithmique.md).
 
 ## Références
  - https://www.python.org/
@@ -78,6 +92,7 @@ Pour comprendre comment fonctionne les différentes fichiers, veuillez-vous réf
  - https://en.wikipedia.org/
  - https://www.deepl.com/translator
  - https://stackoverflow.com/
+ - https://www.developpez.net/forums/
  - http://apprendre-python.com/
  - https://www.debian.org/
  - https://wiki.debian.org/
