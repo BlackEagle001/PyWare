@@ -70,7 +70,7 @@ Ces fonctionnalités ne sont exécutées que du côté de la machine locale et n
 ### Exécutions distantes
 | Commandes | Description |
 | -- | -- |
-| autostart \[Name\] | Installe PyWare sur la victime sous le nom 'Name'. De plus, PyWare démarre de manière automatique à la connexion de l'utilisateur. |
+| autostart \[Name\] | Installe PyWare sur la victime sous le nom 'Name'. De plus, PyWare démarre de manière automatique à la connexion de l'utilisateur. Pour Linux, les fichiers sont copiés dans le répertoire ~/.*name* et ajouté dans la table cron de l'utilisateur. Pour Windows, les fichiers sont copiés dans le répertoire %APPDATA%\\Microsoft\\Windows\\*Name* et un script est écrit sous le nom %APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\*name*.vbs |
 | exec Command | Exécute la commande 'Command' sur la victime. Attention, cette fonction n'est pas interactive. |
 | installmodules | Installe les modules Python nécessaire à PyWare pour prendre en charge l'ensemble des fonctionnalités. |
 
